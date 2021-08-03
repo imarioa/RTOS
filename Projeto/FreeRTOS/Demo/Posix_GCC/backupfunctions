@@ -1,0 +1,118 @@
+    TickType_t total = xTaskGetTickCount();
+    total /= 100UL;
+
+char *pbuffer = (char *)calloc(1, 2048);
+            vTaskGetRunTimeStats(pbuffer);
+            printf("Dale: %s\n", pbuffer);
+
+
+/* Do not include trace code when performing a code coverage analysis. */
+    #if ( projCOVERAGE_TEST != 1 )
+    {
+        /* Initialise the trace recorder.  Use of the trace recorder is optional.
+        See http://www.FreeRTOS.org/trace for more information. */
+        vTraceEnable( TRC_START );
+
+        /* Start the trace recording - the recording is written to a file if
+        configASSERT() is called. */
+        printf( "\r\nTrace started.\r\nThe trace will be dumped to disk if a call to configASSERT() fails.\r\n" );
+        printf( "\r\nThe trace will be dumped to disk if Enter is hit.\r\n" );
+        uiTraceStart();
+    }
+    #endif
+
+    console_init();
+    #if ( mainSELECTED_APPLICATION == BLINKY_DEMO )
+    {
+        console_print("Starting echo blinky demo\n");
+        main_blinky();
+    }
+    #elif ( mainSELECTED_APPLICATION == FULL_DEMO)
+    {
+        console_print("Starting full demo\n");
+        main_full();
+    }
+    #else
+    {
+        #error "The selected demo is not valid"
+    }
+    #endif /* if ( mainSELECTED_APPLICATION ) */
+
+
+
+
+    const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
+
+	/* Create the queue. */
+	xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint32_t ) );
+
+	if( xQueue != NULL )
+	{
+		/* Start the two tasks as described in the comments at the top of this
+		file. */
+		xTaskCreate( prvQueueReceiveTask,			/* The function that implements the task. */
+					"Rx", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
+					NULL, 							/* The parameter passed to the task - not used in this simple case. */
+					mainQUEUE_RECEIVE_TASK_PRIORITY,/* The priority assigned to the task. */
+					NULL );							/* The task handle is not required, so NULL is passed. */
+
+		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
+
+		/* Create the software timer, but don't start it yet. */
+		xTimer = xTimerCreate( "Timer",				/* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
+								xTimerPeriod,		/* The period of the software timer in ticks. */
+								pdTRUE,				/* xAutoReload is set to pdTRUE. */
+								NULL,				/* The timer's ID is not used. */
+								prvQueueSendTimerCallback );/* The function executed when the timer expires. */
+
+		if( xTimer != NULL )
+		{
+			xTimerStart( xTimer, 0 );
+		}
+
+		/* Start the tasks and timer running. */
+		vTaskStartScheduler();
+	}
+
+	/* If all is well, the scheduler will now be running, and the following
+	line will never be reached.  If the following line does execute, then
+	there was insufficient FreeRTOS heap memory available for the idle and/or
+	timer tasks	to be created.  See the memory management section on the
+	FreeRTOS web site for more details. */
+	for( ;; );
+
+
+    void vTask1( void *pvParameters ){
+//const char *pcTaskName = "Task 1 is running\r\n";
+unsigned int ul;/* volatile to ensure ul is not optimized away. */
+
+    /* As per most tasks, this task is implemented in an infinite loop. */
+    while(1){
+        /* Print out the name of this task. */
+        printf("Foda né\n");
+
+        /* Delay for a period. */
+        for( ul = 0; ul < mainDELAY_LOOP_COUNT; ul++ ){
+        /* This loop is just a very crude delay implementation.  
+        There isnothing to do in here.  
+        Later exampleswill replace this crudeloop with a proper delay/sleep function. */
+        }
+    }
+}
+void vTask2( void *pvParameters ){
+//const char *pcTaskName = "Task 2 is running\r\n";
+unsigned int ul;/* volatile to ensure ul is not optimized away. */
+
+    /* As per most tasks, this task is implemented in an infinite loop. */
+    while(1){
+        /* Print out the name of this task. */
+        printf("Puts\n");
+        /* Delay for a period. */
+        for( ul = 0; ul < mainDELAY_LOOP_COUNT; ul++ ){
+        /* This loop is just a very crude delay implementation.  
+        There isnothing to do in here.  
+        Later exampleswill replace this crudeloop with a proper delay/sleep function. */
+        }
+    }
+}
